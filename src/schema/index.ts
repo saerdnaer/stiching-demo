@@ -13,6 +13,7 @@ import { delegateToSchema } from '@graphql-tools/delegate';
 
 import MangoSubschemaConfig from './mango';
 import { getColors } from './colors';
+import { pruneSchema } from '@graphql-tools/utils';
 
 export default async (): Promise<GraphQLSchema> => {
 	class Loader extends UrlLoader {
@@ -114,7 +115,7 @@ export default async (): Promise<GraphQLSchema> => {
 	`;
 
 	console.info('merging schemas…');
-	const mergedSchema = stitchSchemas({
+	const mergedSchema = pruneSchema(stitchSchemas({
 		typeDefs: [
 			radioExtensions,
 			nodeInterface
@@ -303,7 +304,7 @@ export default async (): Promise<GraphQLSchema> => {
 
 			},
 		}
-	});
+	}));
 
 	const sdl = printSchema(mergedSchema);
 	await fs.writeFile(__dirname + '/mergedSchema.graphql', sdl, () => {});
