@@ -97,7 +97,6 @@ export default async (): Promise<GraphQLSchema> => {
 	const nodeInterface = gql`
 		interface NodeInterface {
 			id: ID!
-			baseIdPrefix: String!
 		}
 		type NodeType implements NodeInterface & MangoNode {
 			id: ID!

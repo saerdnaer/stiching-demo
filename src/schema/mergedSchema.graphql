@@ -12288,7 +12288,6 @@ enum CacheControlScope {
 
 interface NodeInterface {
   id: ID!
-  baseIdPrefix: String!
 }
 
 type NodeType implements NodeInterface & MangoNode {
