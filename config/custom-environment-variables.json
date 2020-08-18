@@ -1,0 +1,14 @@
+{
+	"port": "BIND_PORT",
+	"branch" : "BRANCH",
+	"env": "ENV",
+	"redis": {
+		"host": "REDIS_HOST",
+		"port": "REDIS_PORT",
+		"db": "REDIS_DB_INDEX"
+	},
+	"apq": {
+		"cacheEngine": "APQ_CACHE_ENGINE",
+		"ttl": "APQ_TTL"
+	}
+}
