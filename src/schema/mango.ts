@@ -167,6 +167,14 @@ export default async (options: LoadSchemaOptions): Promise<SubschemaConfig> => {
 						&& !type.name.includes('Input')
 						&& !type.name.includes('FeatureMap')
 						&& !type.name.includes('Subscription')
+						&& !type.name.includes('Subject')
+						&& !type.name.includes('Geo')
+						&& !type.name.includes('Genre')
+						&& !type.name.includes('Agent')
+						&& !type.name.includes('Account')
+						&& !type.name.includes('Audience')
+						&& !type.name.includes('Availability')
+						&& !type.name.includes('Categor')
 						&& !type.name.includes('Edge')
 					}),
 					new RenameTypes((name: string) => {
