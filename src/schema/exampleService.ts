@@ -5,7 +5,7 @@ import gql from "graphql-tag";
 import { SubschemaConfig } from "@graphql-tools/delegate";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import { stitchSchemas } from "@graphql-tools/stitch";
-import { FilterTypes, RenameTypes, FilterRootFields } from "@graphql-tools/wrap";
+import { FilterTypes, RenameTypes, FilterRootFields, HoistField, PruneSchema } from "@graphql-tools/wrap";
 
 
 const typeDefs = gql`
@@ -29,6 +29,7 @@ const typeDefs = gql`
 	}
 	type Viewer {
 		item(id: ID!): ItemInterface
+		#item2(id: ID!): ItemInterface
 	}
 `;
 
@@ -46,7 +47,8 @@ const resolvers = {
 		item: () => {
 			console.log('item resolver was called')
 			return ITEM;
-		}
+		},
+		//item2: () => ITEM
 	},
 };
 
@@ -57,33 +59,22 @@ export default async (): Promise<SubschemaConfig> => {
 	});
 
 
-	const schema = stitchSchemas({
-		subschemas: [
-			{
-				schema: classicSchema,
-				transforms: [
-					new FilterTypes(type => {
-						return type.name !== 'Query'
-					}),
-					new RenameTypes((name: string) => {
-						switch (name) {
-							case 'Viewer':
-								return 'Query';
-							default:
-								return name;
-						}
-					}),
-					new FilterRootFields(operation => operation === 'Query'),
-				]
-			}
-		],
-		//mergeTypes: false
-	});
-
-	const sdl = printSchema(schema);
-	await fs.writeFile(__dirname + '/transformedSchema.graphql', sdl, () => {});
-
 	return {
-		schema,
+		schema: classicSchema,
+		transforms: [
+			new HoistField('Query', ['viewer', 'item'], 'item'),
+			new PruneSchema({}), // we have to remove the now empty Viewer type
+			/* new FilterTypes(type => {
+				return type.name !== 'Viewer'
+			}), /*
+			new RenameTypes((name: string) => {
+				switch (name) {
+					case 'Viewer':
+						return 'Query';
+					default:
+						return name;
+				}
+			}) */
+		]
 	};
 };
