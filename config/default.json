@@ -2,13 +2,5 @@
 	"port": 5000,
 	"branch" : "",
 	"env": "",
-	"isDevelopment": true,
-	"redis": {
-		"port": "6379",
-		"dbIndex": 1
-	},
-	"apq": {
-		"cacheEngine": "in-memory",
-		"ttl": 86400
-	}
+	"isDevelopment": true
 }
