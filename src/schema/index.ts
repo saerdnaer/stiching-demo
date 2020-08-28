@@ -63,10 +63,8 @@ export default async (): Promise<GraphQLSchema> => {
 		interface AudioBroadcastService {
 			id: ID!
 			name: String
-			description: String
 			colors: JSON
 			url: String
-			epg(dayOffset: Int, day: Day, slots: [MangoEPGSlotKey]): [MangoEPGEntry]
 		}
 
 		type AudioBroadcastServiceConnection {
@@ -76,7 +74,6 @@ export default async (): Promise<GraphQLSchema> => {
 		}
 		extend type MangoBroadcastService implements AudioBroadcastService {
 			colors: JSON
-			description: String
 			url: String
 		}
 
@@ -130,10 +127,7 @@ export default async (): Promise<GraphQLSchema> => {
 					new FilterRootFields((operation, fieldName) => {
 						if (operation === 'Query' && fieldName) {
 							return [
-								'broadcastService', 'allBroadcastServices', 'broadcastEvent',
-								'programme', 'allProgrammes',
-								'series', 'allSeries',
-								'clip', 'image',
+								'broadcastService', 'allBroadcastServices',
 								'node', 'nodes', 'findInSophora',
 								'id'].includes(fieldName)
 						}

@@ -1,54 +1,132 @@
 directive @cacheControl(maxAge: Int, scope: CacheControlScope) on OBJECT | FIELD_DEFINITION
 
-type Query implements MangoNode {
-  id: ID!
+type Query {
 
-  """Find a BroadcastEvent by id."""
-  broadcastEvent(
-    """id of the BroadcastEvent"""
-    id: ID!
-  ): MangoBroadcastEventInterface
-
-  """Find all BroadcastServices."""
+  # original root fields
   broadcastServices(after: String, first: Int, before: String, last: Int, filter: MangoBroadcastServiceFilter, orderBy: MangoBroadcastServiceSortOrder): MangoBroadcastServiceConnection
+  broadcastService(id: ID!): MangoBroadcastServiceInterface
 
-  """Find a BroadcastService by id."""
-  broadcastService(
-    """id of the BroadcastService"""
-    id: ID!
-  ): MangoBroadcastServiceInterface
-
-  """Find a Clip by id."""
-  clip(
-    """id of the Clip"""
-    id: ID!
-  ): MangoClipInterface
-
-  """Find a Image by id."""
-  image(
-    """id of the Image"""
-    id: ID!
-  ): MangoImageInterface
-
-  """Find all Programmes."""
-  programmes(after: String, first: Int, before: String, last: Int, filter: MangoProgrammeFilter, orderBy: MangoProgrammeSortOrder): MangoProgrammeConnection
-
-  """Find a Programme by id."""
-  programme(
-    """id of the Programme"""
-    id: ID!
-  ): MangoProgrammeInterface
-
-  """Find a Series by id."""
-  series(
-    """id of the Series"""
-    id: ID!
-  ): MangoSeriesInterface
-  findInSophora(id: String!): MangoImportableThingInterface
+  # new root field added by gateway
   audioBroadcastService(id: AudioBroadcastServiceId!): AudioBroadcastService
   audioBroadcastServices(after: String, first: Int, before: String, last: Int, filter: MangoBroadcastServiceFilter, orderBy: MangoBroadcastServiceSortOrder): AudioBroadcastServiceConnection
+
   node(id: ID!): Node
 }
+scalar JSON
+
+
+interface AudioBroadcastService {
+  id: ID!
+  name: String
+  colors: JSON
+  url: String
+}
+
+type AudioBroadcastServiceConnection {
+  count: Int
+  nodes: [AudioBroadcastService!]
+  pageInfo: MangoPageInfo
+}
+
+
+interface MangoBroadcastServiceInterface {
+  id: ID!
+  name: String
+  baseIdPrefix: String!
+
+
+  audioOnly: Boolean
+  broadcastsOns(after: String, first: Int, before: String, last: Int, filter: MangoLivestreamFilter, orderBy: MangoLivestreamSortOrder): MangoLivestreamConnection
+  createdAt: Datetime
+  externalURLS(after: String, first: Int, before: String, last: Int, filter: MangoExternalURLFilter, orderBy: MangoExternalURLSortOrder): MangoExternalURLConnection
+  fallbackTeaserImage: MangoImageInterface
+  modifiedAt: Datetime
+  operatedBy: MangoOrganizationInterface
+  programmes(after: String, first: Int, before: String, last: Int, filter: MangoProgrammeFilter, orderBy: MangoProgrammeSortOrder): MangoProgrammeConnection
+  epg(dayOffset: Int, day: Day, slots: [MangoEPGSlotKey]): [MangoEPGEntry]
+}
+
+type MangoBroadcastService implements MangoNode & MangoBroadcastServiceInterface & AudioBroadcastService {
+  id: ID!
+  name: String
+  colors: JSON
+  url: String
+
+  baseIdPrefix: String!
+
+
+
+  """
+  Specifies if something is or deals with audio-only content. (de: nur Audio, en: audio only)
+  """
+  audioOnly: Boolean
+
+  """
+  The livestream on which the programme of the broadcast service is published. (de: sendet auf, en: broadcasts on)
+  """
+  broadcastsOns(after: String, first: Int, before: String, last: Int, filter: MangoLivestreamFilter, orderBy: MangoLivestreamSortOrder): MangoLivestreamConnection
+
+  """
+  Specifies when a record was created in the database. (de: Erstellt am, en: created at)
+  """
+  createdAt: Datetime
+
+  """
+  Associates a creative work or an agent with any number of external URLs. (de: externe URL, en: external URL)
+  """
+  externalURLS(after: String, first: Int, before: String, last: Int, filter: MangoExternalURLFilter, orderBy: MangoExternalURLSortOrder): MangoExternalURLConnection
+
+  """
+  A fallback image that can be used to advertise creative works (published by the PublicationService) which do not have any teaser image. (de: Fallback Teaser Bild, en: fallback teaser image)
+  """
+  fallbackTeaserImage: MangoImageInterface
+
+  """
+  Specifies when a record was last modified. (de: Geändert am, en: modified at)
+  """
+  modifiedAt: Datetime
+
+  """
+  Associates a publication service with the organization owning or operating it. (de: betrieben von, en: operated by)
+  """
+  operatedBy: MangoOrganizationInterface
+
+  """
+  All programmes broadcasted by this broadcast service (calculated property) (de: Sendungen, en: Programmes)
+  """
+  programmes(after: String, first: Int, before: String, last: Int, filter: MangoProgrammeFilter, orderBy: MangoProgrammeSortOrder): MangoProgrammeConnection
+
+  """ElectronicProgrammeGuide"""
+  epg(
+    """
+    Specify the day to return EPGEntries for in a _relative_ manner: `0` for today, `-1` for yesterday, `1` for tomorrow,...
+    """
+    dayOffset: Int
+
+    """
+    Specify the day to return EPGEntries for in an _absolute_ manner: `YYYY-MM-DD`.
+    """
+    day: Day
+
+    """Return only EPG entries in these EPGSlots"""
+    slots: [MangoEPGSlotKey]
+  ): [MangoEPGEntry]
+}
+
+
+enum AudioBroadcastServiceId {
+  Bayern_1
+  Bayern_2
+  Bayern_3
+  BR_Klassik
+  B5_aktuell
+  puls
+  Bayern_plus
+  BR_Heimat
+}
+
+
+
 
 """An object with an ID"""
 interface MangoNode {
@@ -164,7 +242,7 @@ input MangoDateFilter {
 }
 
 """
-Scalar type that represents date and time with a time zone, which, while serialized as a string, promises to conform to ISO‐8601 format also supports the now keyword which represents the current server time. Now also supports an optional ISO‐8601 format period which is addedto the current time. Example: now(P3Y6M4DT12H30M5S) or now(-P3Y6M4DT12H30M5S) 
+Scalar type that represents date and time with a time zone, which, while serialized as a string, promises to conform to ISO‐8601 format also supports the now keyword which represents the current server time. Now also supports an optional ISO‐8601 format period which is addedto the current time. Example: now(P3Y6M4DT12H30M5S) or now(-P3Y6M4DT12H30M5S)
 """
 scalar Datetime
 
@@ -2720,72 +2798,7 @@ interface MangoLivestreamInterface {
   ): [MangoEPGEntry]
 }
 
-"""
-One particular broadcast service, usually with a fixed frequency or digital channel. (de: Sender, en: broadcast service)
-"""
-interface MangoBroadcastServiceInterface {
-  id: ID!
-  baseIdPrefix: String!
 
-  """
-  Specifies if something is or deals with audio-only content. (de: nur Audio, en: audio only)
-  """
-  audioOnly: Boolean
-
-  """
-  The livestream on which the programme of the broadcast service is published. (de: sendet auf, en: broadcasts on)
-  """
-  broadcastsOns(after: String, first: Int, before: String, last: Int, filter: MangoLivestreamFilter, orderBy: MangoLivestreamSortOrder): MangoLivestreamConnection
-
-  """
-  Specifies when a record was created in the database. (de: Erstellt am, en: created at)
-  """
-  createdAt: Datetime
-
-  """
-  Associates a creative work or an agent with any number of external URLs. (de: externe URL, en: external URL)
-  """
-  externalURLS(after: String, first: Int, before: String, last: Int, filter: MangoExternalURLFilter, orderBy: MangoExternalURLSortOrder): MangoExternalURLConnection
-
-  """
-  A fallback image that can be used to advertise creative works (published by the PublicationService) which do not have any teaser image. (de: Fallback Teaser Bild, en: fallback teaser image)
-  """
-  fallbackTeaserImage: MangoImageInterface
-
-  """
-  Specifies when a record was last modified. (de: Geändert am, en: modified at)
-  """
-  modifiedAt: Datetime
-
-  """The canonical name of an agent. (de: Name, en: name)"""
-  name: String
-
-  """
-  Associates a publication service with the organization owning or operating it. (de: betrieben von, en: operated by)
-  """
-  operatedBy: MangoOrganizationInterface
-
-  """
-  All programmes broadcasted by this broadcast service (calculated property) (de: Sendungen, en: Programmes)
-  """
-  programmes(after: String, first: Int, before: String, last: Int, filter: MangoProgrammeFilter, orderBy: MangoProgrammeSortOrder): MangoProgrammeConnection
-
-  """ElectronicProgrammeGuide"""
-  epg(
-    """
-    Specify the day to return EPGEntries for in a _relative_ manner: `0` for today, `-1` for yesterday, `1` for tomorrow,...
-    """
-    dayOffset: Int
-
-    """
-    Specify the day to return EPGEntries for in an _absolute_ manner: `YYYY-MM-DD`.
-    """
-    day: Day
-
-    """Return only EPG entries in these EPGSlots"""
-    slots: [MangoEPGSlotKey]
-  ): [MangoEPGEntry]
-}
 
 input MangoProgrammeFilter {
   """Filter by values of property ageRestriction"""
@@ -7739,75 +7752,7 @@ type MangoBroadcastEvent implements MangoNode & MangoBroadcastEventInterface & M
   ): MangoTrackingInfoInterface
 }
 
-"""
-One particular broadcast service, usually with a fixed frequency or digital channel. (de: Sender, en: broadcast service)
-"""
-type MangoBroadcastService implements MangoNode & MangoBroadcastServiceInterface & MangoOrganizationInterface & MangoPublicationServiceInterface & MangoWritableThingInterface & AudioBroadcastService {
-  id: ID!
-  baseIdPrefix: String!
 
-  """
-  Specifies if something is or deals with audio-only content. (de: nur Audio, en: audio only)
-  """
-  audioOnly: Boolean
-
-  """
-  The livestream on which the programme of the broadcast service is published. (de: sendet auf, en: broadcasts on)
-  """
-  broadcastsOns(after: String, first: Int, before: String, last: Int, filter: MangoLivestreamFilter, orderBy: MangoLivestreamSortOrder): MangoLivestreamConnection
-
-  """
-  Specifies when a record was created in the database. (de: Erstellt am, en: created at)
-  """
-  createdAt: Datetime
-
-  """
-  Associates a creative work or an agent with any number of external URLs. (de: externe URL, en: external URL)
-  """
-  externalURLS(after: String, first: Int, before: String, last: Int, filter: MangoExternalURLFilter, orderBy: MangoExternalURLSortOrder): MangoExternalURLConnection
-
-  """
-  A fallback image that can be used to advertise creative works (published by the PublicationService) which do not have any teaser image. (de: Fallback Teaser Bild, en: fallback teaser image)
-  """
-  fallbackTeaserImage: MangoImageInterface
-
-  """
-  Specifies when a record was last modified. (de: Geändert am, en: modified at)
-  """
-  modifiedAt: Datetime
-
-  """The canonical name of an agent. (de: Name, en: name)"""
-  name: String
-
-  """
-  Associates a publication service with the organization owning or operating it. (de: betrieben von, en: operated by)
-  """
-  operatedBy: MangoOrganizationInterface
-
-  """
-  All programmes broadcasted by this broadcast service (calculated property) (de: Sendungen, en: Programmes)
-  """
-  programmes(after: String, first: Int, before: String, last: Int, filter: MangoProgrammeFilter, orderBy: MangoProgrammeSortOrder): MangoProgrammeConnection
-
-  """ElectronicProgrammeGuide"""
-  epg(
-    """
-    Specify the day to return EPGEntries for in a _relative_ manner: `0` for today, `-1` for yesterday, `1` for tomorrow,...
-    """
-    dayOffset: Int
-
-    """
-    Specify the day to return EPGEntries for in an _absolute_ manner: `YYYY-MM-DD`.
-    """
-    day: Day
-
-    """Return only EPG entries in these EPGSlots"""
-    slots: [MangoEPGSlotKey]
-  ): [MangoEPGEntry]
-  colors: JSON
-  description: String
-  url: String
-}
 
 """ (de: Untertitel für Hörgeschädigte, en: Caption)"""
 type MangoCaption implements MangoNode & MangoCaptionInterface & MangoSubtitleInterface & MangoWritableThingInterface {
@@ -12253,33 +12198,6 @@ type MangoVideoProfile implements MangoNode & MangoVideoProfileInterface & Mango
   width: Int
 }
 
-scalar JSON
-
-enum AudioBroadcastServiceId {
-  Bayern_1
-  Bayern_2
-  Bayern_3
-  BR_Klassik
-  B5_aktuell
-  puls
-  Bayern_plus
-  BR_Heimat
-}
-
-interface AudioBroadcastService {
-  id: ID!
-  name: String
-  description: String
-  colors: JSON
-  url: String
-  epg(dayOffset: Int, day: Day, slots: [MangoEPGSlotKey]): [MangoEPGEntry]
-}
-
-type AudioBroadcastServiceConnection {
-  count: Int
-  nodes: [AudioBroadcastService!]
-  pageInfo: MangoPageInfo
-}
 
 enum CacheControlScope {
   PUBLIC
