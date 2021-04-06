@@ -4,11 +4,15 @@ import { stitchSchemas } from '@graphql-tools/stitch';
 import { delegateToSchema } from '@graphql-tools/delegate';
 
 import ExampleServiceSubschemaConfig from './exampleService';
+import PlaylistSubschemaConfig from './playlistService';
+import audioElement from './audioelements';
+
 
 export default async (): Promise<GraphQLSchema> => {
 
 	console.info('loading (remote) schemas…');
 	const exampleSubschema = await ExampleServiceSubschemaConfig();
+	const playlistSubschema = await PlaylistSubschemaConfig();
 
 	const typeDefs = gql`
 
@@ -28,12 +32,15 @@ export default async (): Promise<GraphQLSchema> => {
 	`;
 
 	const mergedSchema = stitchSchemas({
-		typeDefs,
-		subschemas: [
-			{
-				...exampleSubschema,
-			}
+		typeDefs: [
+			audioElement.typeDefs,
+			typeDefs
 		],
+		subschemas: [
+			exampleSubschema,
+			playlistSubschema,
+		],
+		mergeDirectives: true,
 		resolvers: {
 			Query: {
 				coloredItem: {
@@ -55,5 +62,14 @@ export default async (): Promise<GraphQLSchema> => {
 		}
 	});
 
-	return mergedSchema;
+	console.info('adding computed properties…');
+	const productSchema = stitchSchemas({
+		subschemas: [ mergedSchema ],
+		typeDefs: [ ],
+		mergeDirectives: true,
+		resolvers: {
+		}
+	});
+
+	return productSchema;
 }
