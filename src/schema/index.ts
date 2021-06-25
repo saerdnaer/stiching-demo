@@ -4,6 +4,7 @@ import { stitchSchemas } from '@graphql-tools/stitch';
 import { delegateToSchema } from '@graphql-tools/delegate';
 
 import ExampleServiceSubschemaConfig from './exampleService';
+import { WrapQuery } from '@graphql-tools/wrap';
 
 export default async (): Promise<GraphQLSchema> => {
 
@@ -13,17 +14,17 @@ export default async (): Promise<GraphQLSchema> => {
 	const typeDefs = gql`
 
 		extend type Query {
-			coloredItem(id: ID!): ColoredItem
+			article(id: ID!): Article
 		}
 
-		interface ColoredItem {
+		extend type Clip {
+			customVideoUrl: String
+		}
+
+		type Article {
 			id: ID!
 			name: String
-			color: String
-		}
-
-		extend type Item implements ColoredItem {
-			color: String
+			clip: Clip
 		}
 	`;
 
@@ -36,21 +37,53 @@ export default async (): Promise<GraphQLSchema> => {
 		],
 		resolvers: {
 			Query: {
-				coloredItem: {
+				article: () => ({__typename:"Article",id:'1234', name:"test"}),
+			},
+			Article: {
+				clip: {
 					resolve(_, { id }, context: any, info: GraphQLResolveInfo) {
 						return delegateToSchema({
 							schema: exampleSubschema,
-							fieldName: 'item',
-							args: { id: id },
+							fieldName: 'viewer',
 							context,
 							info,
+							transforms: [
+								new WrapQuery(
+									['viewer'],
+									(subtree) => ({
+										kind: 'Field',
+										name: {
+											kind: 'Name',
+											value: 'clip',
+										},
+										arguments: [
+											{
+												kind: 'Argument',
+												name: { kind: 'Name', value: 'id' },
+												value: {
+													kind: 'StringValue',
+													value: '123',
+												},
+											},
+										],
+										selectionSet: subtree,
+									}),
+									(result) => {
+										if (result?.clip) {
+											return result.clip;
+										}
+
+										return null;
+									}
+								),
+							],
 						});
 					},
 				},
 			},
 
-			Item: {
-				color: () => "#000"
+			Clip: {
+				customVideoUrl: () => "fooBar"
 			},
 		}
 	});

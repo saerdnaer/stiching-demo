@@ -1,0 +1,22 @@
+type Query {
+  node(id: ID!): Node
+  viewer: Viewer
+}
+
+interface Node {
+  id: ID!
+}
+
+interface ClipInterface {
+  id: ID!
+  name: String
+}
+
+type Clip implements Node & ClipInterface {
+  id: ID!
+  name: String
+}
+
+type Viewer {
+  clip(id: ID!): ClipInterface
+}

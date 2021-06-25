@@ -13,12 +13,12 @@ const typeDefs = gql`
 		id: ID!
 	}
 
-	interface ItemInterface {
+	interface ClipInterface {
 		id: ID!
 		name: String
 	}
 
-	type Item implements Node & ItemInterface {
+	type Clip implements Node & ClipInterface {
 		id: ID!
 		name: String
 	}
@@ -28,24 +28,24 @@ const typeDefs = gql`
 		viewer: Viewer
 	}
 	type Viewer {
-		item(id: ID!): ItemInterface
+		clip(id: ID!): ClipInterface
 	}
 `;
 
-const ITEM = {
-	__typename: "Item",
+const CLIP = {
+	__typename: "Clip",
 	id: "123",
 	name: "Foo bar 42",
 };
 
 const resolvers = {
 	Query: {
-		node: () => ITEM,
+		node: () => CLIP,
 	},
 	Viewer: {
-		item: () => {
-			console.log('item resolver was called')
-			return ITEM;
+		clip: () => {
+			console.log('clip resolver was called')
+			return CLIP;
 		}
 	},
 };
@@ -61,20 +61,6 @@ export default async (): Promise<SubschemaConfig> => {
 		subschemas: [
 			{
 				schema: classicSchema,
-				transforms: [
-					new FilterTypes(type => {
-						return type.name !== 'Query'
-					}),
-					new RenameTypes((name: string) => {
-						switch (name) {
-							case 'Viewer':
-								return 'Query';
-							default:
-								return name;
-						}
-					}),
-					new FilterRootFields(operation => operation === 'Query'),
-				]
 			}
 		],
 		//mergeTypes: false
@@ -84,6 +70,6 @@ export default async (): Promise<SubschemaConfig> => {
 	await fs.writeFile(__dirname + '/transformedSchema.graphql', sdl, () => {});
 
 	return {
-		schema,
+		schema: classicSchema,
 	};
 };
