@@ -24,6 +24,8 @@ async function run() {
 		introspection: true,
 	});
 
+	await apolloServer.start();
+
 	apolloServer.applyMiddleware({ app, path: graphqlPath });
 
 	const server = createServer(app);
