@@ -4,12 +4,15 @@ import { stitchSchemas } from '@graphql-tools/stitch';
 import { delegateToSchema } from '@graphql-tools/delegate';
 
 import ExampleServiceSubschemaConfig from './exampleService';
+import RemoteServiceSubschemaConfig from './remoteService';
+
 import { WrapQuery } from '@graphql-tools/wrap';
 
 export default async (): Promise<GraphQLSchema> => {
 
 	console.info('loading (remote) schemas…');
 	const exampleSubschema = await ExampleServiceSubschemaConfig();
+	const remoteSubschema = await RemoteServiceSubschemaConfig();
 
 	const typeDefs = gql`
 
@@ -31,9 +34,8 @@ export default async (): Promise<GraphQLSchema> => {
 	const mergedSchema = stitchSchemas({
 		typeDefs,
 		subschemas: [
-			{
-				...exampleSubschema,
-			}
+			exampleSubschema,
+			remoteSubschema,
 		],
 		resolvers: {
 			Query: {
